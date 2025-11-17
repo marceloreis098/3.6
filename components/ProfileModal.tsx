@@ -1,3 +1,4 @@
+
 // Novo arquivo: components/ProfileModal.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
@@ -71,8 +72,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ user, onClose, onSave }) =>
             const data = await generate2FASecret(user.id);
             setSecret(data.secret);
             setQrCodeUrl(data.qrCodeUrl);
-        } catch (error: any) {
-            setError2FA(error.message || 'Falha ao gerar o segredo 2FA.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Falha ao gerar o segredo 2FA.';
+            setError2FA(message);
         } finally {
             setLoading2FA(false);
         }
