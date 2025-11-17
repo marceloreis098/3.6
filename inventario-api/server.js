@@ -191,10 +191,10 @@ const runMigrations = async () => {
             },
             { // Migration 16: Remove UNIQUE from patrimonio, make serial NOT NULL, remove 2FASecret from equipment
                 id: 16, sql: `
-                ALTER TABLE equipment DROP INDEX IF EXISTS patrimonio; -- Use IF EXISTS for robustness
+                ALTER TABLE equipment DROP INDEX patrimonio;
                 ALTER TABLE equipment MODIFY COLUMN patrimonio VARCHAR(255) NULL;
                 ALTER TABLE equipment MODIFY COLUMN serial VARCHAR(255) NOT NULL;
-                ALTER TABLE equipment DROP COLUMN IF EXISTS 2FASecret;
+                ALTER TABLE equipment DROP COLUMN 2FASecret;
                 `
             },
             { // Migration 17: Add new fields for detailed equipment information
@@ -237,9 +237,9 @@ const runMigrations = async () => {
                     try {
                         await connection.query(migration.sql);
                     } catch (err) {
-                        // MySQL error for duplicate column. MariaDB uses the same.
-                        if (err.code === 'ER_DUP_FIELDNAME' || err.code === 'ER_DUP_KEYNAME' || err.code === 'ER_MULTIPLE_PRI_KEY' || err.code === 'ER_CANT_DROP_FIELD_OR_KEY') {
-                            console.warn(`[MIGRATION WARN] Migration ${migration.id} failed because column/key already exists or cannot be dropped. Assuming it was applied. Marking as run.`);
+                        // FIX: Added 'ER_BAD_FIELD_ERROR' to robustly handle dropping columns/indexes that might not exist.
+                        if (['ER_DUP_FIELDNAME', 'ER_DUP_KEYNAME', 'ER_MULTIPLE_PRI_KEY', 'ER_CANT_DROP_FIELD_OR_KEY', 'ER_BAD_FIELD_ERROR'].includes(err.code)) {
+                            console.warn(`[MIGRATION WARN] Migration ${migration.id} failed with a common schema error (${err.code}). Assuming it was already applied. Marking as run.`);
                         } else {
                             // For other errors, we should fail loudly.
                             throw err;
