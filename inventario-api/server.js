@@ -12,9 +12,8 @@ const crypto = require('crypto');
 
 const app = express();
 
-// FIX: Explicitly handle CORS pre-flight requests for all routes.
-// This ensures the browser's security checks pass before the actual request (GET, POST, etc.) is made.
-app.options('*', cors()); 
+// FIX: Set up CORS handling. It's crucial to enable this before defining routes
+// and before body parsers to correctly handle pre-flight OPTIONS requests.
 app.use(cors());
 
 app.use(express.json({ limit: '10mb' })); // Increase limit for photo uploads
